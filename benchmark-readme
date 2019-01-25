@@ -1,0 +1,17 @@
+Host Configuration
+	* QEMU emulator version 3.1.0
+	* qemu-kvm service enabled.
+
+Preparation
+  $ export PCOND="<300000"
+  $ export KW=elapsed
+  $ source env.sh
+
+Running with kvm:
+
+  $ make qemu KVM=1 | tee p0
+    # repeatedly `cat README`
+  $ r0 p0 | r1 | rf > p2
+  $ tail -n +10 p2 > p3
+  $ r3 p3
+
