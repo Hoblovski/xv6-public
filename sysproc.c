@@ -6,11 +6,15 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "rdtsc.h"
 
 int
 sys_fork(void)
 {
-  return fork();
+  BEGIN_TIMER;
+  int t = fork();
+  END_TIMER_REPORT;
+  return t;
 }
 
 int

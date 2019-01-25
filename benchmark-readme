@@ -1,0 +1,15 @@
+Host Configuration
+	* QEMU emulator version 3.1.0 (Debian 1:2.5+dfsg-5ubuntu10.34),  Copyright (c) 2003-2008 Fabrice Bellard
+	* qemu-kvm service enabled.
+
+Preparation
+  $ source env.sh
+  $ export KW=elapsed
+  $ export COND=">100000"
+
+Running with KVM
+
+  $ make qemu KVM=1 | r0 | r1 | rf > p2
+    # type 'forktest' for enough times and ^A x exit
+  $ tail -n +10 p2 > p3
+  $ r3 p3
