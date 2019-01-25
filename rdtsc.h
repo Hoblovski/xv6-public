@@ -15,7 +15,7 @@ static inline unsigned long long rdtsc() {
 
 #define END_TIMER_REPORT \
   unsigned long long __elapsed_ticks = rdtsc() - __beg_ticks; \
-  unsigned __t1 = __elapsed_ticks >> 32 \
+  unsigned __t1 = __elapsed_ticks >> 32; \
   unsigned __t2 = __elapsed_ticks & 0xFFFFFFFF; \
   cprintf("\n[elapsed] 0x%x 0x%x\n", __t1, __t2); \
 
