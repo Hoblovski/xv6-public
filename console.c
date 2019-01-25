@@ -175,7 +175,8 @@ consputc(int c)
     uartputc('\b'); uartputc(' '); uartputc('\b');
   } else
     uartputc(c);
-  cgaputc(c);
+  if (cpuid() == 1)
+    cgaputc(c);
 }
 
 #define INPUT_BUF 128
