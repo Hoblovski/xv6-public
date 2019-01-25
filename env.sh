@@ -10,4 +10,5 @@ r0() {
 alias r1="awk '{print strtonum(\$1)*(2**32)+strtonum(\$2)}'"
 alias r2="awk '{print \$1-x; x=\$1}'"
 alias r2s="awk '{if(NR%2==0) print \$0-x; x=\$0}'"
+alias rf="awk '{if(\$1 $PCOND) print \$1;}'"
 alias r3="python3 count.py"
