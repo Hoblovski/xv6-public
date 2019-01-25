@@ -1,0 +1,31 @@
+Host Configuration
+	* QEMU emulator version 2.5.0 (Debian 1:2.5+dfsg-5ubuntu10.34),  Copyright (c) 2003-2008 Fabrice Bellard
+	* qemu-kvm service enabled.
+
+Preparation
+	$ source env.sh
+	$ export KW=now
+
+Running without kvm:
+
+	$ make qemu -j4 | r0 | r1 | r2 > o2
+		# after enough time, use ^A x to quit qemu
+	$ tail -n +10 o2 > o3
+		# very early stats are dropped.
+	$ r3 o3
+	6.68627e+07 0.718644 4.91946e+08
+	#  avg			 std/avg	 range
+
+Running with KVM
+
+	$ make qemu KVM=1 -j4 | r0 | r1 | r2 > p3
+		# after enough time, use ^A x to quit qemu
+	$ tail -n +10 p2 > p3
+		# very early stats are dropped.
+	$ r3 p3
+	1.14755e+08 0.00330716 3.96536e+06
+	#  avg			 std/avg	 range
+
+Conclusion:
+
+	KVM increases reliability of rdtsc's results.
