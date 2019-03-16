@@ -10,19 +10,16 @@ static inline unsigned long long rdtsc() {
   return (((unsigned long long) d) << 32) | ((unsigned long long) a);
 }
 
-#define BEGIN_TIMER \
-  unsigned long long __beg_ticks = rdtsc();
+// Type 1 checkpoints measures the time interval between consecutive checkpoints.
+//
+// Used for timers.
+void type1_checkpoint(void);
 
-#define END_TIMER_REPORT \
-  unsigned long long __elapsed_ticks = rdtsc() - __beg_ticks; \
-  unsigned __t1 = __elapsed_ticks >> 32 \
-  unsigned __t2 = __elapsed_ticks & 0xFFFFFFFF; \
-  cprintf("\n[elapsed] 0x%x 0x%x\n", __t1, __t2); \
+// An entire line of report: format is AVG/MIN/MAX
+void checkpoint_report(int reset);
 
-#define SINGLE_REPORT \
-  unsigned long long __now_ticks = rdtsc(); \
-  unsigned __t1 = __now_ticks >> 32; \
-  unsigned __t2 = __now_ticks & 0xFFFFFFFF; \
-  cprintf("\n[now] 0x%x 0x%x\n", __t1, __t2);
+
+// TODO: checkpoint_report and type1_checkpoint is actually using the same critical region.
+// Should I add a lock?
 
 #endif // RDTSC_H
