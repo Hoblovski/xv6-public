@@ -22,7 +22,6 @@ void checkpoint_report(void)
   unsigned minlo = min;
   unsigned maxhi = max >> 32;
   unsigned maxlo = max;
-  cprintf("REPx %x:%x/%x:%x/%x:%x\n", avghi, avglo, minhi, minlo, maxhi, maxlo);
   cprintf("REPd %d:%d/%d:%d/%d:%d\n", avghi, avglo, minhi, minlo, maxhi, maxlo);
 }
 

@@ -9,6 +9,7 @@
 #include "traps.h"
 #include "mmu.h"
 #include "x86.h"
+#include "rdtsc.h"
 
 // Local APIC registers, divided by 4 for use as uint[] indices.
 #define ID      (0x0020/4)   // ID
@@ -158,6 +159,17 @@ lapicstartap(uchar apicid, uint addr)
     lapicw(ICRLO, STARTUP | (addr>>12));
     microdelay(200);
   }
+}
+
+int
+sys_rlapic(void)
+{
+  type2_checkpoint_begin();
+  for (volatile register int i = 0; i < 1000000; i++) {
+    lapic[ID];
+  }
+  type2_checkpoint_end();
+  return 0;
 }
 
 #define CMOS_STATA   0x0a
