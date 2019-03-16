@@ -1,6 +1,8 @@
 #ifndef RDTSC_H
 #define RDTSC_H
 
+#define WINDOW_LENGTH 256
+
 static inline unsigned long long rdtsc() {
   register unsigned a __asm__("eax");
   register unsigned d __asm__("edx");
@@ -12,14 +14,10 @@ static inline unsigned long long rdtsc() {
 
 // Type 1 checkpoints measures the time interval between consecutive checkpoints.
 //
+// It reports once in every WINDOW_LENGTH invocations.
+//
 // Used for timers.
 void type1_checkpoint(void);
 
-// An entire line of report: format is AVG/MIN/MAX
-void checkpoint_report(int reset);
-
-
-// TODO: checkpoint_report and type1_checkpoint is actually using the same critical region.
-// Should I add a lock?
 
 #endif // RDTSC_H

@@ -53,9 +53,6 @@ trap(struct trapframe *tf)
       acquire(&tickslock);
       ticks++;
       type1_checkpoint();
-      if (!(ticks & 0xFF)) {  // report every 256 timers
-        checkpoint_report(1);
-      }
       wakeup(&ticks);
       release(&tickslock);
     }
