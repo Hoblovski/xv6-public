@@ -6,11 +6,15 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "rdtsc.h"
 
 int
 sys_fork(void)
 {
-  return fork();
+  type2_checkpoint_begin();
+  int r = fork();
+  type2_checkpoint_end();
+  return r;
 }
 
 int

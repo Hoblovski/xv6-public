@@ -47,3 +47,25 @@ type1_checkpoint(void)
 }
 
 
+void type2_checkpoint_begin(void)
+{
+  prev = rdtsc();
+}
+
+
+void type2_checkpoint_end(void)
+{
+  unsigned long long now = rdtsc();
+  unsigned long long diff = now - prev;   // wraps do no harm
+  if (diff < IGNORE_LESS_MIN || diff > IGNORE_MORE_MAX)
+    return;
+  if (diff < min) min = diff;
+  if (diff > max) max = diff;
+  vals[cnt++] = diff;
+  if (cnt >= WINDOW_LENGTH) {
+    checkpoint_report();
+    cnt = 0;
+    max = 0;
+    min = ~0ull;
+  }
+}
