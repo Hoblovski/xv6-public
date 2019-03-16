@@ -144,7 +144,7 @@ getcmd(char *buf, int nbuf)
 int
 main(void)
 {
-  static char buf[100] = "forktest\n";
+  static char buf[100] = "read READ_BENCH\n";
   int fd;
 
   // Ensure that three file descriptors are open.
@@ -155,7 +155,7 @@ main(void)
     }
   }
 
-  // Don't read -- just run forktest
+  // Don't read -- just run `read`
   if(fork1() == 0)
     runcmd(parsecmd(buf));
   wait();

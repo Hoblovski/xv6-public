@@ -182,9 +182,14 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
+	_read\
 
-fs.img: mkfs README $(UPROGS)
-	./mkfs fs.img README $(UPROGS)
+fs.img: mkfs README READ_BENCH $(UPROGS)
+	./mkfs fs.img README READ_BENCH $(UPROGS)
+
+# READ_BENCH can only be 71480 bytes -- FS limit.
+READ_BENCH:
+	dd if=/dev/urandom of=$@ count=1 bs=71480
 
 -include *.d
 
@@ -192,7 +197,7 @@ clean:
 	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
 	*.o *.d *.asm *.sym vectors.S bootblock entryother \
 	initcode initcode.out kernel xv6.img fs.img kernelmemfs \
-	xv6memfs.img mkfs .gdbinit \
+	xv6memfs.img mkfs .gdbinit READ_BENCH \
 	$(UPROGS)
 
 # make a printout
@@ -256,10 +261,10 @@ qemu-nox-gdb: fs.img xv6.img .gdbinit
 # check in that version.
 
 EXTRA=\
-	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
+	mkfs.c ulib.c user.h cat.c read.c echo.c forktest.c grep.c kill.c\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
 	printf.c umalloc.c\
-	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
+	README READ_BENCH dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 
 dist:
