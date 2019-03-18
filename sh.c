@@ -156,9 +156,11 @@ main(void)
   }
 
   // Don't read -- just run `read`
-  if(fork1() == 0)
-    runcmd(parsecmd(buf));
-  wait();
+  while(1){
+    if(fork1() == 0)
+      runcmd(parsecmd(buf));
+    wait();
+  }
   exit();
 }
 

@@ -3,7 +3,7 @@
 
 #define WINDOW_LENGTH 1024
 // Below only used for type 2. To filter out failure path etc.
-#define IGNORE_LESS_MIN 100000
+#define IGNORE_LESS_MIN 25000
 #define IGNORE_MORE_MAX ~0ull
 
 static inline unsigned long long rdtsc() {
