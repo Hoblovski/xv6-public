@@ -36,3 +36,5 @@
 #define IRQ_ERROR       19
 #define IRQ_SPURIOUS    31
 
+// Used for TSC deadline mode of APIC Timers.
+#define TSC_DEADLINE_INTERVAL 0x10000000
