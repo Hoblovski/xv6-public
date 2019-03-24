@@ -54,6 +54,7 @@ trap(struct trapframe *tf)
       wakeup(&ticks);
       release(&tickslock);
     }
+    wrmsr64(MSR_IA32_TSC_DEADLINE, rdtsc() + TSC_DEADLINE_INTERVAL);
     lapiceoi();
     break;
   case T_IRQ0 + IRQ_IDE:
