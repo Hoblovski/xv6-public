@@ -67,8 +67,13 @@ lapicinit(void)
   // If xv6 cared more about precise timekeeping,
   // TICR would be calibrated using an external time source.
   lapicw(TDCR, X1);
-  lapicw(TIMER, TSC_DEADLINE | (T_IRQ0 + IRQ_TIMER));
-  wrmsr64(MSR_IA32_TSC_DEADLINE, TSC_DEADLINE_INTERVAL);
+  if (lapicid() == 0) {
+    lapicw(TIMER, TSC_DEADLINE | (T_IRQ0 + IRQ_TIMER));
+    wrmsr64(MSR_IA32_TSC_DEADLINE, TSC_DEADLINE_INITIAL);
+  } else {
+    lapicw(TIMER, PERIODIC | (T_IRQ0 + IRQ_TIMER));
+    lapicw(TICR, 10000000);
+  }
 
   // Disable logical interrupt lines.
   lapicw(LINT0, MASKED);

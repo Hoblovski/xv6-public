@@ -49,12 +49,15 @@ trap(struct trapframe *tf)
   switch(tf->trapno){
   case T_IRQ0 + IRQ_TIMER:
     if(cpuid() == 0){
+      cprintf("-");
       acquire(&tickslock);
       ticks++;
       wakeup(&ticks);
       release(&tickslock);
+      wrmsr64(MSR_IA32_TSC_DEADLINE, rdtsc() + TSC_DEADLINE_INTERVAL);
+    } else {
+      cprintf("|");
     }
-    wrmsr64(MSR_IA32_TSC_DEADLINE, rdtsc() + TSC_DEADLINE_INTERVAL);
     lapiceoi();
     break;
   case T_IRQ0 + IRQ_IDE:
