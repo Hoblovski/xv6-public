@@ -144,6 +144,14 @@ lcr3(uint val)
   asm volatile("movl %0,%%cr3" : : "r" (val));
 }
 
+static inline u64
+rdtsc()
+{
+  uint a, d;
+  __asm__ volatile ( "rdtsc\n\t" : "=a" (a), "=d" (d));
+  return (((u64) d) << 32) | ((u64) a);
+}
+
 //PAGEBREAK: 36
 // Layout of the trap frame built on the stack by the
 // hardware and by trapasm.S, and passed to trap().
