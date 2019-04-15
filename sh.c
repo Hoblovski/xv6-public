@@ -144,7 +144,7 @@ getcmd(char *buf, int nbuf)
 int
 main(void)
 {
-  static char buf[100] = "forktest\n";
+  static char buf[100] = "workload\n";
   int fd;
 
   // Ensure that three file descriptors are open.

@@ -11,10 +11,7 @@
 int
 sys_fork(void)
 {
-  type2_checkpoint_begin(0);
-  int r = fork();
-  type2_checkpoint_end(0);
-  return r;
+  return fork();
 }
 
 int

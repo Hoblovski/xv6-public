@@ -12,7 +12,7 @@ u64 vals[CHECKPOINT_MAXNS][MAX_WINDOW_LENGTH];
 u64 cnt[CHECKPOINT_MAXNS];
 u64 prev[CHECKPOINT_MAXNS];
 u64 window_sz[CHECKPOINT_MAXNS] = {
-  [0] = 512,
+  [0] = 32,
 };
 
 
