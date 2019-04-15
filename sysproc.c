@@ -93,3 +93,16 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int
+sys_report(void)
+{
+  type1_checkpoint(0);
+
+  int status;
+
+  if(argint(0, &status) < 0)
+    return -1;
+
+  return 0;
+}
