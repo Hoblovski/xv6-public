@@ -8,9 +8,9 @@
 #include "spinlock.h"
 
 struct {
-  struct spinlock lock;
   struct proc proc[NPROC];
-} ptable;
+  struct spinlock lock;
+} ptable[NCPU];
 
 static struct proc *initproc;
 
@@ -23,7 +23,8 @@ static void wakeup1(void *chan);
 void
 pinit(void)
 {
-  initlock(&ptable.lock, "ptable");
+  for (int rqid = 0; rqid < NCPU; rqid++)
+    initlock(&ptable[rqid].lock, "ptable[rqid]");
 }
 
 // Must be called with interrupts disabled
@@ -32,16 +33,26 @@ cpuid() {
   return mycpu()-cpus;
 }
 
+int
+runqueue_id() {
+  int i;
+  i = lapicid(); // FIXME: lapicid aren't required to be continuous.
+  if (i < 0 || i > 2)
+    panic(".");
+  return i;
+}
+
+
 // Must be called with interrupts disabled to avoid the caller being
 // rescheduled between reading lapicid and running through the loop.
 struct cpu*
 mycpu(void)
 {
   int apicid, i;
-  
+
   if(readeflags()&FL_IF)
     panic("mycpu called with interrupts enabled\n");
-  
+
   apicid = lapicid();
   // APIC IDs are not guaranteed to be contiguous. Maybe we should have
   // a reverse map, or reserve a register to store &cpus[i].
@@ -75,21 +86,22 @@ allocproc(void)
 {
   struct proc *p;
   char *sp;
+  int rqid = runqueue_id();
 
-  acquire(&ptable.lock);
+  acquire(&ptable[rqid].lock);
 
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  for(p = ptable[rqid].proc; p < &ptable[rqid].proc[NPROC]; p++)
     if(p->state == UNUSED)
       goto found;
 
-  release(&ptable.lock);
+  release(&ptable[rqid].lock);
   return 0;
 
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
 
-  release(&ptable.lock);
+  release(&ptable[rqid].lock);
 
   // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
@@ -124,7 +136,7 @@ userinit(void)
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
   p = allocproc();
-  
+
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)
     panic("userinit: out of memory?");
@@ -146,11 +158,12 @@ userinit(void)
   // run this process. the acquire forces the above
   // writes to be visible, and the lock is also needed
   // because the assignment might not be atomic.
-  acquire(&ptable.lock);
+  int rqid = runqueue_id();
+  acquire(&ptable[rqid].lock);
 
   p->state = RUNNABLE;
 
-  release(&ptable.lock);
+  release(&ptable[rqid].lock);
 }
 
 // Grow current process's memory by n bytes.
@@ -212,11 +225,12 @@ fork(void)
 
   pid = np->pid;
 
-  acquire(&ptable.lock);
+  int rqid = runqueue_id();
+  acquire(&ptable[rqid].lock);
 
   np->state = RUNNABLE;
 
-  release(&ptable.lock);
+  release(&ptable[rqid].lock);
 
   return pid;
 }
@@ -247,13 +261,14 @@ exit(void)
   end_op();
   curproc->cwd = 0;
 
-  acquire(&ptable.lock);
+  int rqid = runqueue_id();
+  acquire(&ptable[rqid].lock);
 
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
 
   // Pass abandoned children to init.
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+  for(p = ptable[rqid].proc; p < &ptable[rqid].proc[NPROC]; p++){
     if(p->parent == curproc){
       p->parent = initproc;
       if(p->state == ZOMBIE)
@@ -275,12 +290,13 @@ wait(void)
   struct proc *p;
   int havekids, pid;
   struct proc *curproc = myproc();
-  
-  acquire(&ptable.lock);
+
+  int rqid = runqueue_id();
+  acquire(&ptable[rqid].lock);
   for(;;){
     // Scan through table looking for exited children.
     havekids = 0;
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    for(p = ptable[rqid].proc; p < &ptable[rqid].proc[NPROC]; p++){
       if(p->parent != curproc)
         continue;
       havekids = 1;
@@ -295,19 +311,19 @@ wait(void)
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
-        release(&ptable.lock);
+        release(&ptable[rqid].lock);
         return pid;
       }
     }
 
     // No point waiting if we don't have any children.
     if(!havekids || curproc->killed){
-      release(&ptable.lock);
+      release(&ptable[rqid].lock);
       return -1;
     }
 
     // Wait for children to exit.  (See wakeup1 call in proc_exit.)
-    sleep(curproc, &ptable.lock);  //DOC: wait-sleep
+    sleep(curproc, &ptable[rqid].lock);  //DOC: wait-sleep
   }
 }
 
@@ -325,19 +341,20 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  
+
+  int rqid = runqueue_id();
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
     // Loop over process table looking for process to run.
-    acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    acquire(&ptable[rqid].lock);
+    for(p = ptable[rqid].proc; p < &ptable[rqid].proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
 
       // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
+      // to release ptable[rqid].lock and then reacquire it
       // before jumping back to us.
       c->proc = p;
       switchuvm(p);
@@ -350,12 +367,12 @@ scheduler(void)
       // It should have changed its p->state before coming back.
       c->proc = 0;
     }
-    release(&ptable.lock);
+    release(&ptable[rqid].lock);
 
   }
 }
 
-// Enter scheduler.  Must hold only ptable.lock
+// Enter scheduler.  Must hold only ptable[rqid].lock
 // and have changed proc->state. Saves and restores
 // intena because intena is a property of this
 // kernel thread, not this CPU. It should
@@ -368,8 +385,9 @@ sched(void)
   int intena;
   struct proc *p = myproc();
 
-  if(!holding(&ptable.lock))
-    panic("sched ptable.lock");
+  int rqid = runqueue_id();
+  if(!holding(&ptable[rqid].lock))
+    panic("sched ptable[rqid].lock");
   if(mycpu()->ncli != 1)
     panic("sched locks");
   if(p->state == RUNNING)
@@ -385,10 +403,11 @@ sched(void)
 void
 yield(void)
 {
-  acquire(&ptable.lock);  //DOC: yieldlock
+  int rqid = runqueue_id();
+  acquire(&ptable[rqid].lock);  //DOC: yieldlock
   myproc()->state = RUNNABLE;
   sched();
-  release(&ptable.lock);
+  release(&ptable[rqid].lock);
 }
 
 // A fork child's very first scheduling by scheduler()
@@ -397,8 +416,9 @@ void
 forkret(void)
 {
   static int first = 1;
-  // Still holding ptable.lock from scheduler.
-  release(&ptable.lock);
+  int rqid = runqueue_id();
+  // Still holding ptable[rqid].lock from scheduler.
+  release(&ptable[rqid].lock);
 
   if (first) {
     // Some initialization functions must be run in the context
@@ -418,21 +438,22 @@ void
 sleep(void *chan, struct spinlock *lk)
 {
   struct proc *p = myproc();
-  
+
   if(p == 0)
     panic("sleep");
 
   if(lk == 0)
     panic("sleep without lk");
 
-  // Must acquire ptable.lock in order to
+  int rqid = runqueue_id();
+  // Must acquire ptable[rqid].lock in order to
   // change p->state and then call sched.
-  // Once we hold ptable.lock, we can be
+  // Once we hold ptable[rqid].lock, we can be
   // guaranteed that we won't miss any wakeup
-  // (wakeup runs with ptable.lock locked),
+  // (wakeup runs with ptable[rqid].lock locked),
   // so it's okay to release lk.
-  if(lk != &ptable.lock){  //DOC: sleeplock0
-    acquire(&ptable.lock);  //DOC: sleeplock1
+  if(lk != &ptable[rqid].lock){  //DOC: sleeplock0
+    acquire(&ptable[rqid].lock);  //DOC: sleeplock1
     release(lk);
   }
   // Go to sleep.
@@ -445,21 +466,26 @@ sleep(void *chan, struct spinlock *lk)
   p->chan = 0;
 
   // Reacquire original lock.
-  if(lk != &ptable.lock){  //DOC: sleeplock2
-    release(&ptable.lock);
+  if(lk != &ptable[rqid].lock){  //DOC: sleeplock2
+    release(&ptable[rqid].lock);
     acquire(lk);
   }
 }
 
 //PAGEBREAK!
 // Wake up all processes sleeping on chan.
-// The ptable lock must be held.
+// The ptable[rqid] lock must be held.
 static void
 wakeup1(void *chan)
 {
   struct proc *p;
 
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  int rqid = 1;// runqueue_id();
+  for(p = ptable[rqid].proc; p < &ptable[rqid].proc[NPROC]; p++)
+    if(p->state == SLEEPING && p->chan == chan)
+      p->state = RUNNABLE;
+  rqid = 0;// runqueue_id();
+  for(p = ptable[rqid].proc; p < &ptable[rqid].proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan)
       p->state = RUNNABLE;
 }
@@ -468,9 +494,10 @@ wakeup1(void *chan)
 void
 wakeup(void *chan)
 {
-  acquire(&ptable.lock);
+  int rqid = runqueue_id();
+  acquire(&ptable[rqid].lock);
   wakeup1(chan);
-  release(&ptable.lock);
+  release(&ptable[rqid].lock);
 }
 
 // Kill the process with the given pid.
@@ -481,18 +508,19 @@ kill(int pid)
 {
   struct proc *p;
 
-  acquire(&ptable.lock);
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+  int rqid = runqueue_id();
+  acquire(&ptable[rqid].lock);
+  for(p = ptable[rqid].proc; p < &ptable[rqid].proc[NPROC]; p++){
     if(p->pid == pid){
       p->killed = 1;
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING)
         p->state = RUNNABLE;
-      release(&ptable.lock);
+      release(&ptable[rqid].lock);
       return 0;
     }
   }
-  release(&ptable.lock);
+  release(&ptable[rqid].lock);
   return -1;
 }
 
@@ -516,7 +544,8 @@ procdump(void)
   char *state;
   uint pc[10];
 
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+  int rqid = runqueue_id();
+  for(p = ptable[rqid].proc; p < &ptable[rqid].proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
     if(p->state >= 0 && p->state < NELEM(states) && states[p->state])

@@ -141,10 +141,12 @@ getcmd(char *buf, int nbuf)
   return 0;
 }
 
+static char *cmd_corex[2] = {"echo hi\n", "read\n"};
+
 int
 main(void)
 {
-  static char buf[100] = "read\n";
+  char *buf = cmd_corex[coreid()];
   int fd;
 
   // Ensure that three file descriptors are open.
@@ -174,7 +176,7 @@ main(void)
 void
 panic(char *s)
 {
-  printf(2, "%s\n", s);
+  printf(2, "shell panic %s\n", s);
   exit();
 }
 
