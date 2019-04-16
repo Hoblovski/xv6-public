@@ -9,31 +9,22 @@ myread(int fd)
 {
   int n;
 
-  while((n = read(fd, buf, sizeof(buf))) > 0) {
-  }
-  if(n < 0){
-    printf(1, "read: read error\n");
-    exit();
-  }
+  for (int i = 0; i < 71168 / 512; i++)
+    if ((n = read(fd, buf, sizeof(buf))) != 512)
+      printf(1, "read: premature incomplete read!\n");
 }
 
 int
 main(int argc, char *argv[])
 {
-  int fd, i;
+  int fd;
 
-  if(argc <= 1){
-    myread(0);
-    exit();
-  }
-
-  for(i = 1; i < argc; i++){
-    if((fd = open(argv[i], 0)) < 0){
-      printf(1, "read: cannot open %s\n", argv[i]);
+  while (1) {
+    if((fd = open("READ_BENCH", 0)) < 0){
+      printf(1, "read: cannot open READ_BENCH\n");
       exit();
     }
     myread(fd);
     close(fd);
   }
-  exit();
 }

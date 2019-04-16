@@ -144,7 +144,7 @@ getcmd(char *buf, int nbuf)
 int
 main(void)
 {
-  static char buf[100] = "read READ_BENCH\n";
+  static char buf[100] = "read\n";
   int fd;
 
   // Ensure that three file descriptors are open.
@@ -155,8 +155,15 @@ main(void)
     }
   }
 
-  // Don't read -- just run `read`
+  // Read and run input commands.
   while(1){
+    if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
+      // Chdir must be called by the parent, not the child.
+      buf[strlen(buf)-1] = 0;  // chop \n
+      if(chdir(buf+3) < 0)
+        printf(2, "cannot cd %s\n", buf+3);
+      continue;
+    }
     if(fork1() == 0)
       runcmd(parsecmd(buf));
     wait();

@@ -27,7 +27,7 @@ OBJS = \
 	uart.o\
 	vectors.o\
 	vm.o\
-	rdtsc.o\
+	benchmark.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf
@@ -188,8 +188,9 @@ fs.img: mkfs README READ_BENCH $(UPROGS)
 	./mkfs fs.img README READ_BENCH $(UPROGS)
 
 # READ_BENCH can only be 71480 bytes -- FS limit.
+# Thus use k*512 to ensure every read is the same.
 READ_BENCH:
-	dd if=/dev/urandom of=$@ count=1 bs=71480
+	dd if=/dev/urandom of=$@ count=1 bs=71168
 
 -include *.d
 
