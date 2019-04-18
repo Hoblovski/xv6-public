@@ -141,7 +141,7 @@ getcmd(char *buf, int nbuf)
   return 0;
 }
 
-static char *cmd_corex[2] = {"echo hi\n", "read\n"};
+static char *cmd_corex[2] = {"workload\n", "read\n"};
 
 int
 main(void)

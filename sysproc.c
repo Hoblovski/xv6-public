@@ -95,3 +95,19 @@ sys_coreid(void)
 {
   return lapicid();
 }
+
+int
+sys_report(void)
+{
+  int status;
+
+  if(argint(0, &status) < 0)
+    return -1;
+//
+//  if (status)
+//    cprintf("%1");
+//  else
+//    cprintf("%0");
+
+  return 0;
+}

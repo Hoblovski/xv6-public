@@ -415,16 +415,16 @@ yield(void)
 void
 forkret(void)
 {
-  static int first = 1;
+  static volatile uint first = 1;
   int rqid = runqueue_id();
   // Still holding ptable[rqid].lock from scheduler.
   release(&ptable[rqid].lock);
 
-  if (first) {
+  if (xchg(&first, 0) == 1) {
+    // ensure the initialization is performed only once.
     // Some initialization functions must be run in the context
     // of a regular process (e.g., they call sleep), and thus cannot
     // be run from main().
-    first = 0;
     iinit(ROOTDEV);
     initlog(ROOTDEV);
   }

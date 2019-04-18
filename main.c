@@ -51,7 +51,8 @@ mpenter(void)
 static void
 mpmain(void)
 {
-  cprintf("cpu%d: starting %d\n", cpuid(), cpuid());
+  int coreid = cpuid();
+  cprintf("cpu%d: starting %d\n", coreid, coreid);
   idtinit();       // load idt register
   xchg(&(mycpu()->started), 1); // tell startothers() we're up
   userinit();      // first user process
