@@ -32,6 +32,7 @@
 #define TIMER   (0x0320/4)   // Local Vector Table 0 (TIMER)
   #define X1         0x0000000B   // divide counts by 1
   #define PERIODIC   0x00020000   // Periodic
+  #define TSC_DEADLINE  0x00040000   // TSC Deadline
 #define PCINT   (0x0340/4)   // Performance Counter LVT
 #define LINT0   (0x0350/4)   // Local Vector Table 1 (LINT0)
 #define LINT1   (0x0360/4)   // Local Vector Table 2 (LINT1)
@@ -65,8 +66,13 @@ lapicinit(void)
   // If xv6 cared more about precise timekeeping,
   // TICR would be calibrated using an external time source.
   lapicw(TDCR, X1);
-  lapicw(TIMER, PERIODIC | (T_IRQ0 + IRQ_TIMER));
-  lapicw(TICR, 10000000);
+  if (lapicid()==0) {
+    lapicw(TIMER, TSC_DEADLINE | (T_IRQ0 + IRQ_TIMER));
+    wrmsr64(MSR_IA32_TSC_DEADLINE, TSC_DEADLINE_INITIAL);
+  } else {
+    lapicw(TIMER, PERIODIC | (T_IRQ0 + IRQ_TIMER));
+    lapicw(TICR, 10000000);
+  }
 
   // Disable logical interrupt lines.
   lapicw(LINT0, MASKED);

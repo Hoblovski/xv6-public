@@ -1,5 +1,7 @@
 // Routines to let C code use special x86 instructions.
 
+#define MSR_IA32_TSC_DEADLINE 0x6e0
+
 static inline uchar
 inb(ushort port)
 {
@@ -142,6 +144,25 @@ static inline void
 lcr3(uint val)
 {
   asm volatile("movl %0,%%cr3" : : "r" (val));
+}
+
+static inline void
+native_write_msr(unsigned msr, unsigned low, unsigned high)
+{
+	__asm__ __volatile__("wrmsr" : : "c" (msr), "a"(low), "d" (high) : "memory");
+}
+
+static inline void
+wrmsr(unsigned msr, unsigned low, unsigned high)
+{
+	native_write_msr(msr, low, high);
+}
+
+static inline void
+wrmsr64(unsigned msr, u64 tot)
+{
+  uint hi = tot >> 32, lo = tot & 0xFFFFFFFF;
+	native_write_msr(msr, lo, hi);
 }
 
 static inline u64

@@ -36,3 +36,6 @@
 #define IRQ_ERROR       19
 #define IRQ_SPURIOUS    31
 
+// Used for TSC deadline mode of APIC Timers.
+#define TSC_DEADLINE_INTERVAL 20000000    // around 10ms
+#define TSC_DEADLINE_INITIAL 20000000   // 10ms. let kernel setup be uninterrupted for enough time.
