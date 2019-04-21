@@ -15,7 +15,6 @@
 #include "sleeplock.h"
 #include "file.h"
 #include "fcntl.h"
-#include "benchmark.h"
 
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
@@ -74,11 +73,9 @@ sys_read(void)
   int n;
   char *p;
 
-  type2_checkpoint_begin(0);
   if(argfd(0, 0, &f) < 0 || argint(2, &n) < 0 || argptr(1, &p, n) < 0)
     return -1;
   int r = fileread(f, p, n);
-  type2_checkpoint_end(0);
   return r;
 }
 

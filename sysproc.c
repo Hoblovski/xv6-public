@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "benchmark.h"
 
 int
 sys_fork(void)
@@ -101,9 +102,11 @@ sys_report(void)
 {
   int status;
 
+  type1_checkpoint(0);
+
   if(argint(0, &status) < 0)
     return -1;
-//
+
 //  if (status)
 //    cprintf("%1");
 //  else

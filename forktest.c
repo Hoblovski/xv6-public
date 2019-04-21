@@ -1,4 +1,3 @@
-// Test that fork fails gracefully.
 // Tiny executable so that the limit can be filling the proc table.
 
 #include "types.h"
@@ -17,29 +16,32 @@ void
 forktest(void)
 {
   int n, pid;
-  for(n=0; n<N; n++){
-    pid = fork();
-    if(pid < 0)
-      break;
-    if(pid == 0)
-      exit();
-  }
 
-  if(n == N){
-    printf(1, "fork claimed to work N times!\n", N);
-    exit();
-  }
+  while (1) {
+    for(n=0; n<N; n++){
+      pid = fork();
+      if(pid < 0)
+        break;
+      if(pid == 0)
+        exit();
+    }
 
-  for(; n > 0; n--){
-    if(wait() < 0){
-      printf(1, "wait stopped early\n");
+    if(n == N){
+      printf(1, "fork claimed to work N times!\n", N);
       exit();
     }
-  }
 
-  if(wait() != -1){
-    printf(1, "wait got too many\n");
-    exit();
+    for(; n > 0; n--){
+      if(wait() < 0){
+        printf(1, "wait stopped early\n");
+        exit();
+      }
+    }
+
+    if(wait() != -1){
+      printf(1, "wait got too many\n");
+      exit();
+    }
   }
 }
 

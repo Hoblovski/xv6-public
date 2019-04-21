@@ -10,6 +10,7 @@ static void startothers(void);
 static void mpmain(void)  __attribute__((noreturn));
 extern pde_t *kpgdir;
 extern char end[]; // first address after kernel loaded from ELF file
+volatile uint kinit2_ok = 0;
 
 // Bootstrap processor starts running C code here.
 // Allocate a real stack and switch to it, first
@@ -34,6 +35,7 @@ main(void)
   ideinit();       // disk 
   startothers();   // start other processors
   kinit2(P2V(4*1024*1024), P2V(PHYSTOP)); // must come after startothers()
+  xchg(&kinit2_ok, 1);
   mpmain();        // finish this processor's setup
 }
 
