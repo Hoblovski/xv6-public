@@ -89,3 +89,21 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int
+sys_requestport(void)
+{
+  int n;
+
+  if(argint(0, &n) < 0)
+    return -1;
+  if(argint(0, &n) >= 65536)
+    return -1;
+
+  pushcli();
+  unsigned char *io_bitmap = mycpu()->tss.io_bitmap;
+  io_bitmap[n>>3] &= ~(1 << (n & 7));
+  popcli();
+
+  return 0;
+}
