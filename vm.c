@@ -172,7 +172,7 @@ switchuvm(struct proc *p)
   // setting IOPL=0 in eflags *and* iomb beyond the tss segment limit
   // forbids I/O instructions (e.g., inb and outb) from user space
   mycpu()->tss.ts.iomb = (ushort) sizeof(struct taskstate);
-  memset(mycpu()->tss.io_bitmap, 0xff, sizeof(mycpu()->tss.io_bitmap));
+  memmove(mycpu()->tss.io_bitmap, p->io_bitmap, sizeof(p->io_bitmap));
   ltr(SEG_TSS << 3);
   lcr3(V2P(p->pgdir));  // switch to process's address space
   popcli();

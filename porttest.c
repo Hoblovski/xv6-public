@@ -20,11 +20,14 @@ main(int argc, char *argv[])
     requestport(0x80);
   }
 
-  printf(1, "outb...\n");
-  ushort port = 0x80;
-  uchar data = 40;
-  asm volatile("out %0,%1" : : "a" (data), "d" (port));
-  printf(1, "done\n");
+  for (int i = 0; i < 10; i++) {
+      printf(1, "outb...  ");
+      ushort port = 0x80;
+      uchar data = 40;
+      asm volatile("out %0,%1" : : "a" (data), "d" (port));
+      printf(1, "ok\n");
+      sleep(10);
+  }
 
   exit();
 }

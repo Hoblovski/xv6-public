@@ -144,9 +144,11 @@ struct taskstate {
   ushort iomb;       // I/O map base address
 };
 
+#define IOBM_SZ 8193 // follow Linux, add 1 over 65536/8
+
 struct tss_struct {
     struct taskstate ts;
-    unsigned char io_bitmap[8193]; // follow Linux, add 1 over 65536/8
+    unsigned char io_bitmap[IOBM_SZ];
 };
 
 // Gate descriptors for interrupts and traps

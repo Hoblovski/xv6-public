@@ -101,9 +101,11 @@ sys_requestport(void)
     return -1;
 
   pushcli();
-  unsigned char *io_bitmap = mycpu()->tss.io_bitmap;
-  io_bitmap[n>>3] &= ~(1 << (n & 7));
+  struct cpu *c = mycpu();
+  unsigned char *io_bitmap = c->tss.io_bitmap;
+  unsigned char mask = 1 << (n & 7);
+  io_bitmap[n>>3] &= ~mask;
+  c->proc->io_bitmap[n>>3] &= ~mask;
   popcli();
-
   return 0;
 }

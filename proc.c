@@ -111,6 +111,8 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+  memset(p->io_bitmap, 0xff, sizeof(p->io_bitmap));
+  // deny any port access initially
 
   return p;
 }
