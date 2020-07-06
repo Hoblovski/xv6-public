@@ -26,6 +26,12 @@ main(int argc, char *argv[])
 {
   int fd, i;
 
+  printf(1, "outb");
+  ushort port = 0x80;
+  uchar data = 40;
+  asm volatile("out %0,%1" : : "a" (data), "d" (port));
+  printf(1, " ok\n");
+
   if(argc <= 1){
     cat(0);
     exit();

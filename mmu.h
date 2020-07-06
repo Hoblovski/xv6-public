@@ -144,6 +144,11 @@ struct taskstate {
   ushort iomb;       // I/O map base address
 };
 
+struct tss_struct {
+    struct taskstate ts;
+    unsigned char io_bitmap[8193]; // follow Linux, add 1 over 65536/8
+};
+
 // Gate descriptors for interrupts and traps
 struct gatedesc {
   uint off_15_0 : 16;   // low 16 bits of offset in segment

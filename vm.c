@@ -164,14 +164,15 @@ switchuvm(struct proc *p)
     panic("switchuvm: no pgdir");
 
   pushcli();
-  mycpu()->gdt[SEG_TSS] = SEG16(STS_T32A, &mycpu()->ts,
-                                sizeof(mycpu()->ts)-1, 0);
+  mycpu()->gdt[SEG_TSS] = SEG16(STS_T32A, &mycpu()->tss,
+                                sizeof(mycpu()->tss)-1, 0);
   mycpu()->gdt[SEG_TSS].s = 0;
-  mycpu()->ts.ss0 = SEG_KDATA << 3;
-  mycpu()->ts.esp0 = (uint)p->kstack + KSTACKSIZE;
+  mycpu()->tss.ts.ss0 = SEG_KDATA << 3;
+  mycpu()->tss.ts.esp0 = (uint)p->kstack + KSTACKSIZE;
   // setting IOPL=0 in eflags *and* iomb beyond the tss segment limit
   // forbids I/O instructions (e.g., inb and outb) from user space
-  mycpu()->ts.iomb = (ushort) 0xFFFF;
+  mycpu()->tss.ts.iomb = (ushort) sizeof(struct taskstate);
+  memset(mycpu()->tss.io_bitmap, 0xff, sizeof(mycpu()->tss.io_bitmap));
   ltr(SEG_TSS << 3);
   lcr3(V2P(p->pgdir));  // switch to process's address space
   popcli();
